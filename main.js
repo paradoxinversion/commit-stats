@@ -1,7 +1,13 @@
+const { program } = require("commander");
 const axios = require("axios");
 
-const userAndRepo = process.argv[2];
-const requestURL = `https://api.github.com/repos/${userAndRepo}/stats/commit_activity`;
+program
+  .requiredOption("-r, --repo <name>", "Which repository to fetch")
+  .option("-w, --weeks <number>", "how many weeks to get", 52);
+program.parse(process.argv);
+
+const options = program.opts();
+const requestURL = `https://api.github.com/repos/${options.repo}/stats/commit_activity`;
 const dayNames = [
   "Sunday",
   "Monday",
@@ -80,7 +86,9 @@ const getBusiestDayIndex = (weekdayCommits) => {
  * @param {*} githubResponseData
  */
 const getBusiestDay = (githubResponseData) => {
-  const weeklyCommitsByDay = getCommitsByDays(githubResponseData);
+  const weeksToGet = options.weeks || 52;
+  const weeksCommitData = githubResponseData.slice(0, weeksToGet);
+  const weeklyCommitsByDay = getCommitsByDays(weeksCommitData);
   const weekdayCommits = getCommitsPerWeekday(weeklyCommitsByDay);
 
   const busiestDayIndex = getBusiestDayIndex(weekdayCommits);
